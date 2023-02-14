@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <style>
+    body,
+    html {
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      overflow: hidden;
+    }
+    * {
+      box-sizing: border-box;
+    }
+
+    .container {
+      padding: 16px;
+      height: 100%;
+    }
+    .ques {
+      background-color: snow;
+    }
+    .answer {
+      background-color: burlywood;
+    }
+    .talk {
+      margin-bottom: 24px;
+      padding: 12px;
+      border-radius: 8px;
+    }
+    .flex {
+      display: flex;
+    }
+    #inpt {
+      flex-grow: 1;
+    }
+    .ml-8 {
+      margin-left: 8px;
+    }
+    .list {
+      height: calc(100% - 100px);
+      overflow-y: auto;
+    }
+  </style>
+  <body>
+    <div class="container">
+      <div class="list">
+        <div id="chat-list">
+          <div class="talk ques">12</div>
+          <div class="talk answer">213</div>
+          <div class="talk ques">12</div>
+          <div class="talk answer">213</div>
+          <div class="talk ques">12</div>
+          <div class="talk answer">213</div>
+          <div class="talk ques">12</div>
+          <div class="talk answer">213</div>
+          <div class="talk ques">12</div>
+          <div class="talk answer">213</div>
+          <div class="talk ques">12</div>
+          <div class="talk answer">213</div>
+          <div class="talk ques">12</div>
+          <div class="talk answer">213</div>
+          <div class="talk ques">12</div>
+          <div class="talk answer">213</div>
+        </div>
+        <div id="anchor"></div>
+      </div>
+
+      <div class="flex">
+        <input id="inpt" type="text" />
+        <button class="ml-8" id="submit">提问</button>
+      </div>
+    </div>
+  </body>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    const ChatTypeMap = {
+      问题: "问题",
+      回答: "回答",
+    };
+
+    const ax = axios.create({
+      baseURL: "https://api.forchange.cn",
+    });
+    // ax.post("/", {
+    //   prompt: "Human:测试\nAI:",
+    //   tokensLength: 9,
+    // });
+    const $submitBtn = document.getElementById("submit");
+    const $chatList = document.getElementById("chat-list");
+    const $inpt = document.getElementById("inpt");
+    const $anchor = document.getElementById("anchor");
+    let isWait = false;
+
+    $submitBtn.onclick = async () => {
+      if (isWait) return;
+      isWait = true;
+      const quesText = $inpt.value;
+      if (!quesText.trim()) return;
+      $inpt.value = "";
+      appendChat(quesText, ChatTypeMap.问题);
+      $chatList.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+      const res = await ax.post("/", {
+        prompt: `Human:${quesText}\nAI:`,
+        tokensLength: Array.from(quesText).length,
+      });
+      isWait = false;
+      const { choices } = res.data;
+      choices.forEach((item) => {
+        appendChat(item.text, ChatTypeMap.回答);
+      });
+      $anchor.scrollIntoView({ behavior: "smooth", block: "end" });
+    };
+
+    const appendChat = (text, type) => {
+      const className = type === ChatTypeMap.问题 ? "ques" : "answer";
+      const div = document.createElement("div");
+      div.classList.add("talk");
+      div.classList.add(className);
+      const textNode = document.createTextNode(text);
+      div.appendChild(textNode);
+      $chatList.appendChild(div);
+    };
+  </script>
+</html>
